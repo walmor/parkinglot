@@ -1,0 +1,16 @@
+{
+  "env": {
+    "node": true,
+    "es6": true,
+    "jest": true
+  },
+  "extends": "airbnb-base",
+  "plugins": ["eslint-plugin-import"],
+  "rules": {
+    "no-plusplus": "off",
+    "linebreak-style": "off",
+    "func-names": "off",
+    "class-methods-use-this": "off",
+    "import/prefer-default-export": "off"
+  }
+}

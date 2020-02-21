@@ -1,0 +1,45 @@
+version: "3.7"
+
+services:
+  # app:
+  #   image: pss-app
+  #   build:
+  #     target: base
+  #   env_file:
+  #     - .env
+  #   expose:
+  #     - "${API_PORT}"
+  #   ports:
+  #     - "${API_PORT}:${API_PORT}"
+  #   networks:
+  #     - pss-net
+  #   depends_on:
+  #     - mysql
+  #   stdin_open: true
+  #   tty: true
+
+  mysql:
+    image: mysql:8
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    env_file:
+      - .env
+    environment:
+      - MYSQL_DATABASE=${DB_NAME}
+      - MYSQL_USER=${DB_USER}
+      - MYSQL_PASSWORD=${DB_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${DB_PASSWORD}
+    expose:
+      - "3306"
+    ports:
+      - "3306:${DB_PORT}"
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - pss-net
+
+volumes:
+  mysql-data: {}
+
+networks:
+  pss-net:

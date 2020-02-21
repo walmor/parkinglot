@@ -1,0 +1,15 @@
+{
+  "name": "parking-spot-selector",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "ws:api": "yarn workspace api",
+    "ws:web": "yarn workspace web",
+    "ws:run": "yarn workspaces run"
+  },
+  "workspaces": [
+    "shared",
+    "api",
+    "web"
+  ]
+}
