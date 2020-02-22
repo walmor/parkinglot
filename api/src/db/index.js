@@ -13,7 +13,7 @@ export async function getDatabase() {
 }
 
 async function checkDatabase() {
-  const pendingMigrations = await database.migrate.list();
+  const pendingMigrations = (await database.migrate.list())[1];
 
   if (pendingMigrations.length) {
     await database.migrate.latest();
