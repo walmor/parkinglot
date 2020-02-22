@@ -11,6 +11,7 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
+app.use(express.static('webapp'));
 
 app.get('/api/parkinglot', async (req, res) => {
   res.json(await parkingLotService.getParkingLot());

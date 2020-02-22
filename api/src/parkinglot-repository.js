@@ -1,10 +1,9 @@
-import knex from 'knex';
-import config from './config';
-
-const db = knex(config.knex);
+import { getDatabase } from './db';
 
 const parkingLotRepository = {
   async getParkingLotRows() {
+    const db = await getDatabase();
+
     const spots = await db
       .from('parkinglot')
       .select('row', 'col', 'value')
@@ -13,6 +12,8 @@ const parkingLotRepository = {
   },
 
   async updateSpot(row, col, value) {
+    const db = await getDatabase();
+
     await db('parkinglot')
       .where({ row, col })
       .update({ value });
