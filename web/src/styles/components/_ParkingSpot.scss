@@ -1,0 +1,40 @@
+.ParkingSpot {
+  display: inline-block;
+  width: 70px;
+  height: 100px;
+  margin: 10px;
+  line-height: 100px;
+  box-sizing: border-box;
+  vertical-align: top;
+  font-size: 1.5em;
+  font-family: 'Play';
+  color: #fff;
+
+  &--free {
+    border: 5px solid $primary-color;
+
+    .indicator {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      background-color: #72d252;
+      border-radius: 10px;
+      animation: blinker 1s linear infinite;
+    }
+
+    @keyframes blinker {
+      50% {
+        opacity: 0;
+      }
+    }
+  }
+
+  &--occupied {
+    border: 5px solid $primary-color;
+    background-image: url(../../assets/vehicle.png);
+    background-size: 45px;
+    background-repeat: no-repeat;
+    background-position: center;
+    cursor: pointer;
+  }
+}

@@ -1,0 +1,11 @@
+.ParkingSpotSearchBar {
+  margin: 10px 0;
+  color: #fff;
+  min-height: 40px;
+  line-height: 40px;
+
+  .ParkingLotFull {
+    font-weight: bold;
+    color: $primary-color;
+  }
+}

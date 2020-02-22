@@ -4,7 +4,7 @@ import dotenv from 'dotenv';
 dotenv.config({ path: `${__dirname}/../../../.env` });
 
 const config = {
-  port: parseInt(process.env.PORT, 10) || 3000,
+  port: parseInt(process.env.API_PORT, 10) || 3000,
   knex: {
     client: 'mysql',
     connection: {
