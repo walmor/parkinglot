@@ -17,7 +17,7 @@ app.get('/api/parkinglot', async (req, res) => {
   res.json(await parkingLotService.getParkingLot());
 });
 
-app.get('/api/closest-free-stop', async (req, res) => {
+app.get('/api/closest-free-spot', async (req, res) => {
   const { building } = req.query;
   res.json(await parkingLotService.getClosestFreeSpot(building));
 });

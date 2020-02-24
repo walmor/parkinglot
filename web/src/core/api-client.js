@@ -8,7 +8,7 @@ export const apiClient = {
   },
 
   async getClosestFreeSpot(building) {
-    return this.get(`closest-free-stop?building=${building}`);
+    return this.get(`closest-free-spot?building=${building}`);
   },
 
   async setSpotAsFree(row, col) {
