@@ -3,6 +3,10 @@ import { parkingLotService } from './parkinglot-service';
 import { FREE, OCCUPIED, VOID } from './spot-statuses';
 import * as errors from './errors';
 
+afterEach(() => {
+  jest.restoreAllMocks();
+});
+
 describe('the parking lot service', () => {
   describe('when getting the parking slot layout', () => {
     it('should convert the db rows to a matrix', async () => {
@@ -18,7 +22,9 @@ describe('the parking lot service', () => {
         { row: 2, col: 2, value: 'C2' },
       ];
 
-      parkingLotRepository.getParkingLotRows = jest.fn(() => Promise.resolve(dbrows));
+      jest
+        .spyOn(parkingLotRepository, 'getParkingLotRows')
+        .mockImplementation(() => Promise.resolve(dbrows));
 
       const parkingLot = await parkingLotService.getParkingLot();
 
@@ -40,26 +46,62 @@ describe('the parking lot service', () => {
     ];
 
     beforeEach(() => {
-      parkingLotRepository.updateSpot = jest.fn(() => Promise.resolve());
-      parkingLotService.getParkingLot = jest.fn(() => Promise.resolve(parkingLot));
+      jest.spyOn(parkingLotRepository, 'updateSpot').mockImplementation(() => Promise.resolve());
+
+      jest
+        .spyOn(parkingLotService, 'getParkingLot')
+        .mockImplementation(() => Promise.resolve(parkingLot));
     });
 
-    afterEach(() => {
-      parkingLotRepository.updateSpot.mockRestore();
-      parkingLotService.getParkingLot.mockRestore();
+    describe('when ensuring the given spot can be updated', () => {
+      const tests = [null, undefined, 'nan', 2.5];
+      const input = { row: 1, col: 1, expectedValue: FREE };
+
+      it.each(tests)('should throw error if the row param is not an integer (%s)', async row => {
+        const ensure = parkingLotService.ensureSpotCanBeUpdated({ ...input, row });
+
+        await expect(ensure).rejects.toMatchObject(errors.NOT_AN_INTEGER('row'));
+      });
+
+      it.each(tests)('should throw error if the col param is not an integer (%s)', async col => {
+        const ensure = parkingLotService.ensureSpotCanBeUpdated({ ...input, col });
+
+        await expect(ensure).rejects.toMatchObject(errors.NOT_AN_INTEGER('col'));
+      });
+
+      it.each([-1, 4])('should throw error if the row position is invalid (%d)', async row => {
+        const ensure = parkingLotService.ensureSpotCanBeUpdated({ ...input, row });
+
+        await expect(ensure).rejects.toThrow(errors.INVALID_ROW_NUMBER);
+      });
+
+      it.each([-1, 4])('should throw error if the col position is invalid (%d)', async col => {
+        const ensure = parkingLotService.ensureSpotCanBeUpdated({ ...input, col });
+
+        await expect(ensure).rejects.toThrow(errors.INVALID_COL_NUMBER);
+      });
+
+      it('should throw error if the spot is not on the expected value', async () => {
+        const ensure = parkingLotService.ensureSpotCanBeUpdated({
+          row: 1,
+          col: 1,
+          expectedValue: FREE,
+        });
+
+        await expect(ensure).rejects.toMatchObject(errors.INVALID_SPOT_STATUS(FREE));
+      });
     });
 
     describe('when setting a spot as occupied', () => {
-      it('should throw error if an invalid position is given', async () => {
-        const setSpotAsOccupied = parkingLotService.setStopAsFree(1, 4);
+      it('should ensure the spot can be updated', async () => {
+        jest
+          .spyOn(parkingLotService, 'ensureSpotCanBeUpdated')
+          .mockImplementation(() => Promise.resolve());
 
-        await expect(setSpotAsOccupied).rejects.toThrow(errors.INVALID_COL_NUMBER);
-      });
+        const input = { row: 1, col: 2, expectedValue: FREE };
+        await parkingLotService.setSpotAsOccupied(input.row, input.col);
 
-      it('should throw error if the spot is already occupied', async () => {
-        const setSpotAsOccupied = parkingLotService.setSpotAsOccupied(1, 1);
-
-        await expect(setSpotAsOccupied).rejects.toMatchObject(errors.INVALID_SPOT_STATUS(FREE));
+        expect(parkingLotService.ensureSpotCanBeUpdated).toHaveBeenCalledWith(input);
       });
 
       it('should update the spot correctly', async () => {
@@ -70,22 +112,21 @@ describe('the parking lot service', () => {
     });
 
     describe('when setting a spot as free', () => {
-      it('should throw error if an invalid position is given', async () => {
-        const setSpotAsOccupied = parkingLotService.setStopAsFree(-1, 1);
+      it('should ensure the spot can be updated', async () => {
+        jest
+          .spyOn(parkingLotService, 'ensureSpotCanBeUpdated')
+          .mockImplementation(() => Promise.resolve());
 
-        await expect(setSpotAsOccupied).rejects.toThrow(errors.INVALID_ROW_NUMBER);
-      });
+        const input = { row: 1, col: 2, expectedValue: OCCUPIED };
+        await parkingLotService.setSpotAsFree(input.row, input.col);
 
-      it('should throw error if the spot is already free', async () => {
-        const setSpotAsOccupied = parkingLotService.setStopAsFree(0, 1);
-
-        await expect(setSpotAsOccupied).rejects.toMatchObject(errors.INVALID_SPOT_STATUS(OCCUPIED));
+        expect(parkingLotService.ensureSpotCanBeUpdated).toHaveBeenCalledWith(input);
       });
 
       it('should update the spot correctly', async () => {
-        parkingLotRepository.updateSpot = jest.fn();
+        jest.spyOn(parkingLotRepository, 'updateSpot').mockImplementation(() => Promise.resolve());
 
-        await parkingLotService.setStopAsFree(1, 1);
+        await parkingLotService.setSpotAsFree(1, 1);
 
         expect(parkingLotRepository.updateSpot).toHaveBeenCalledWith(1, 1, FREE);
       });
@@ -132,10 +173,6 @@ describe('the parking lot service', () => {
       ['C1', OCCUPIED, 'C2'],
     ];
 
-    afterEach(() => {
-      parkingLotService.getParkingLot.mockRestore();
-    });
-
     const tests = [
       ['A1', { row: 0, col: 1 }],
       ['A2', { row: 2, col: 3 }],
@@ -147,15 +184,25 @@ describe('the parking lot service', () => {
     ];
 
     it.each(tests)('should find the correct spot if available (%s)', async (building, pos) => {
-      parkingLotService.getParkingLot = jest.fn(() => Promise.resolve(parkingLot));
+      jest
+        .spyOn(parkingLotService, 'getParkingLot')
+        .mockImplementation(() => Promise.resolve(parkingLot));
 
       const result = await parkingLotService.getClosestFreeSpot(building);
 
       expect(result).toMatchObject(pos);
     });
 
+    it.each([null, undefined])('should throw error if the building is %s', async building => {
+      const getClosestFreeSpot = parkingLotService.getClosestFreeSpot(building);
+
+      expect(getClosestFreeSpot).rejects.toThrow(errors.BUILDING_REQUIRED);
+    });
+
     it('should return null if the parking slot is full', async () => {
-      parkingLotService.getParkingLot = jest.fn(() => Promise.resolve(fullParkingLot));
+      jest
+        .spyOn(parkingLotService, 'getParkingLot')
+        .mockImplementation(() => Promise.resolve(fullParkingLot));
 
       const result = await parkingLotService.getClosestFreeSpot('A1');
 

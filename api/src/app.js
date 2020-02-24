@@ -29,7 +29,7 @@ app.post('/api/set-occupied', async (req, res) => {
 
 app.post('/api/set-free', async (req, res) => {
   const { row, col } = req.body;
-  res.json(await parkingLotService.setStopAsFree(row, col));
+  res.json(await parkingLotService.setSpotAsFree(row, col));
 });
 
 app.use(

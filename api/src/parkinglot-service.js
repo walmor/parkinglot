@@ -20,6 +20,10 @@ const parkingLotService = {
   },
 
   async getClosestFreeSpot(building) {
+    if (building == null) {
+      throw errors.BUILDING_REQUIRED;
+    }
+
     const parkingLot = await this.getParkingLot();
     const buildingPosition = this.findBuildingPosition(parkingLot, building);
 
@@ -82,22 +86,30 @@ const parkingLotService = {
   },
 
   async setSpotAsOccupied(row, col) {
-    await this.ensureSpotCanBeUpdated(row, col, FREE);
+    await this.ensureSpotCanBeUpdated({ row, col, expectedValue: FREE });
 
     await parkingLotRepository.updateSpot(row, col, OCCUPIED);
 
     return { row, col, status: OCCUPIED };
   },
 
-  async setStopAsFree(row, col) {
-    await this.ensureSpotCanBeUpdated(row, col, OCCUPIED);
+  async setSpotAsFree(row, col) {
+    await this.ensureSpotCanBeUpdated({ row, col, expectedValue: OCCUPIED });
 
     await parkingLotRepository.updateSpot(row, col, FREE);
 
     return { row, col, status: FREE };
   },
 
-  async ensureSpotCanBeUpdated(row, col, expectedStatus) {
+  async ensureSpotCanBeUpdated({ row, col, expectedValue }) {
+    if (!Number.isInteger(row)) {
+      throw errors.NOT_AN_INTEGER('row');
+    }
+
+    if (!Number.isInteger(col)) {
+      throw errors.NOT_AN_INTEGER('col');
+    }
+
     const parkingLot = await this.getParkingLot();
 
     if (row < 0 || row >= parkingLot.length) {
@@ -108,8 +120,8 @@ const parkingLotService = {
       throw errors.INVALID_COL_NUMBER;
     }
 
-    if (parkingLot[row][col] !== expectedStatus) {
-      throw errors.INVALID_SPOT_STATUS(expectedStatus);
+    if (parkingLot[row][col] !== expectedValue) {
+      throw errors.INVALID_SPOT_STATUS(expectedValue);
     }
   },
 };
